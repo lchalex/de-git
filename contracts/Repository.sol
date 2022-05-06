@@ -2,8 +2,8 @@
 pragma solidity >=0.8.0 ;
 
 
-contract RootClass {
-    function _Address_to_String(address _addr) internal pure returns (string memory) {
+contract RootClass{
+    function _Address_to_String(address _addr) internal pure returns(string memory) {
         bytes memory data = abi.encodePacked(_addr);
         bytes memory alphabet = "0123456789abcdef";
 
@@ -11,8 +11,8 @@ contract RootClass {
         str[0] = "0";
         str[1] = "x";
         for (uint i = 0; i < data.length; i++) {
-            str[2 + i * 2] = alphabet[uint(uint8(data[i] >> 4))];
-            str[3 + i * 2] = alphabet[uint(uint8(data[i] & 0x0f))];
+            str[2+i*2] = alphabet[uint(uint8(data[i] >> 4))];
+            str[3+i*2] = alphabet[uint(uint8(data[i] & 0x0f))];
         }
         return string(str);
     }
@@ -46,50 +46,52 @@ contract RootClass {
     }
 }
 
-contract Repository is RootClass {
+contract Repository is RootClass{
     string state;
+    string public repo_name;
     address owner;
     address[] private address_whitelist;
 
-    constructor(){
+    constructor(string memory _name){
         owner = msg.sender;
         address_whitelist.push(msg.sender);
+        repo_name = _name;
     }
 
     modifier onlyOwner() {
         require(msg.sender == owner,
-            "Only owner can execute!");
+                "Only owner can execute!");
         _;
     }
 
     modifier onlyWhiteList() {
         uint counter = 0;
-        for (uint i = 0; i < address_whitelist.length; i++) {
-            if (msg.sender == address_whitelist[i]) {counter++;}
+        for (uint i=0; i<address_whitelist.length; i++) {
+            if(msg.sender==address_whitelist[i]){counter++;}
         }
         require(counter >= 1,
-            "Only whitelisted address can execute!");
+                "Only whitelisted address can execute!");
         _;
     }
 
-    function whitelist(string memory _addr_str) public onlyOwner {
+    function whitelist(string memory _addr_str) public onlyOwner{
         address _addr = _String_to_Address(_addr_str);
         address_whitelist.push(_addr);
     }
 
-
-    function whitelist_remove(string memory _addr_str) public onlyOwner {
+    function whitelist_remove(string memory _addr_str) public onlyOwner{
         uint counter = 0;
         address _addr = _String_to_Address(_addr_str);
-        for (uint i = 0; i < address_whitelist.length; i++) {
-            if (address_whitelist[i] == _addr) {counter++;}
+        for (uint i=0; i<address_whitelist.length; i++) {
+            if(address_whitelist[i] == _addr){counter++;}
         }
         require(counter >= 1,
-            "Address is not in whitelist.");
-        for (uint i = 0; i < address_whitelist.length; i++) {
-            if (address_whitelist[i] == _addr) {delete address_whitelist[i];}
+                "Address is not in whitelist.");
+        for (uint i=0; i<address_whitelist.length; i++) {
+            if(address_whitelist[i] == _addr){delete address_whitelist[i];}
         }
     }
+
 
     function git_pull() public onlyWhiteList view returns (string memory) {
         return state;
@@ -99,4 +101,11 @@ contract Repository is RootClass {
         state = _state;
     }
 
+    function name() public view returns (string memory){
+        return repo_name;
+    }
+
+    function rename(string memory _name) public onlyOwner{
+        repo_name = _name;
+    }
 }
