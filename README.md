@@ -1,13 +1,14 @@
 ## De-Github
-```bash
-docker build -t 5017 .
 
-docker run --rm \
-           -it \
-           -v $PWD:/workspace \
-           -w /workspace \
-           -e TESTNET=https://rpc.debugchain.net \
-           -e MAINNET=https://rpc.etdchain.net \
-           5017 bash
+### Installing dependencies
+We are using Python 3.8 for development.
 
+Install required packages by running
 ```
+pip install -r requirements.txt
+```
+
+### FileStorage
+At the moment we are using HKUST provided endpoint to upload file and download file. 
+
+In the future, we might deploy a smart contract ourselves as a decentralized filestorage.
