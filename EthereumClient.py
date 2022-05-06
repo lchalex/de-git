@@ -7,7 +7,6 @@ from http import HTTPStatus
 from web3 import Web3, HTTPProvider
 from web3.gas_strategies.rpc import rpc_gas_price_strategy
 
-env = os.environ.get('ENV', 'dev')
 url = os.environ.get('RPC_SERVER', 'http://127.0.0.1:7545')
 # will change to smart contract in future versions
 file_upload_url = 'http://39.98.50.209:5145/un/file/'
