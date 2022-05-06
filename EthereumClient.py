@@ -20,21 +20,21 @@ class EthereumClient:
         if os.path.exists(self.cache_file_path):
             with open(self.cache_file_path, 'rb') as f:
                 self.cache = pickle.load(f)
+        self._login()
 
-    def _login(self, private_key):
+    def _login(self):
+        if not os.path.exists(self.private_key_path):
+            raise Exception(f'Private key not found at {self.private_key_path}.')
+        private_key = open(self.private_key_path, 'r').read()
+        if not private_key or private_key == '':
+            raise Exception(f'Private key is empty. Please put your private key under {self.private_key_path}.')
         self.account = self.w3.eth.account.privateKeyToAccount(private_key)
         self.w3.eth.default_account = self.account.address
 
-    def auto_login_and_cache(func):
+    def _auto_cache(func):
         """Automatically load the account from the private key stored in the same directory"""
 
         def inner1(self, *args, **kwargs):
-            if not os.path.exists(self.private_key_path):
-                raise Exception(f'Private key not found at {self.private_key_path}.')
-            private_key = open(self.private_key_path, 'r').read()
-            if not private_key or private_key == '':
-                raise Exception(f'Private key is empty. Please put your private key under {self.private_key_path}.')
-            self._login(private_key)
 
             returned_values = func(self, *args, **kwargs)
 
@@ -44,7 +44,7 @@ class EthereumClient:
             return returned_values
         return inner1
 
-    @auto_login_and_cache
+    @_auto_cache
     def deploy_repository(self, repository_name, abi=None, bytecode=None):
 
         for contract in self.cache['contracts']:
@@ -117,7 +117,7 @@ class EthereumClient:
             abi=abi
         )
 
-        tx_hash = contract.functions.git_push(json.dumps(state)).transact()
+        tx_hash = contract.functions.git_push(json.dumps(state)).transact({'from': self.account.address})
         tx_receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash)
         return tx_receipt
 
