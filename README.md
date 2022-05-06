@@ -23,3 +23,11 @@ Also please put your private key in the `.key` file. Degit will automatically lo
 At the moment we are using HKUST provided endpoint to upload file and download file. 
 
 In the future, we might deploy a smart contract ourselves as a decentralized filestorage.
+
+### Smart Contract
+At the moment we have `./contracts/Repository.sol` only.
+
+This is the template repository we defined to allow user to create repository with access control.
+
+### Limited Functions
+It is unfortunate that due to limited time and team members, we are unable to replicate git fully.
