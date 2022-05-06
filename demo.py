@@ -1,4 +1,3 @@
-from dgit import DGIT
+from degit import DEGIT
 
-dgit = DGIT()
-dgit._count()
+dgit = DEGIT()
