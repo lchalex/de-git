@@ -1,6 +1,6 @@
 import argparse
 import sys
-from degit import DGIT
+from degit import DEGIT
 
 
 def main(argv=sys.argv[1:]):
@@ -24,7 +24,7 @@ def main(argv=sys.argv[1:]):
     argsp = argsubparsers.add_parser("commit")
 
     args = argparser.parse_args(argv)
-    git = DGIT()
+    git = DEGIT()
 
     if args.command == "add":
         git.add(args)
