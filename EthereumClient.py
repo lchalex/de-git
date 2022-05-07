@@ -76,8 +76,8 @@ class EthereumClient:
         contract_return = self.w3.eth.wait_for_transaction_receipt(tx_hash)
         contract_address = contract_return['contractAddress']
         self.cache['contracts'].append({'name': repository_name, 'contract_address': contract_address, 'abi': abi})
-        print(f"Contract deployed to chain, contract address: {contract_address}. "
-              "Get your deployed contracts by running 'degit list_repositories'")
+        print(f"Contract deployed to chain, contract address: {contract_address}. ")
+        return contract_address, abi
 
     def list_repositories(self):
         for contract in self.cache.get('contracts', []):
@@ -157,43 +157,43 @@ class EthereumClient:
 if __name__ == '__main__':
 
     client = EthereumClient()
-    client.clear_cache()
-
-    file_id_1 = client.upload_file('./compiled_contracts/repository_abi.json')
-    file_id_2 = client.upload_file('./compiled_contracts/repository_bytecode.txt')
-    state = {
-        'commit_history': [{
-            'commit_id': 1,
-            'file_id': file_id_1
-        }, {
-            'commit_id': 2,
-            'file_id': file_id_2
-        }]
-    }
-
-    client.create_repository('test_repo')
-
-    client.list_repositories()
-
-    print('init repo state', client.contract_getter('git_pull', name='test_repo'))
-    client.contract_setter('git_push', json.dumps(state), name='test_repo')
-    print('after 1st push', json.loads(client.contract_getter('git_pull', name='test_repo')))
-
-    file_id_3 = client.upload_file('./contracts/Repository.sol')
-    state['commit_history'].append({'commit_id': 3, 'file_id': file_id_3})
-
-    client.contract_setter('git_push', json.dumps(state), name='test_repo')
-
-    final_state = json.loads(client.contract_getter('git_pull', name='test_repo'))
-
-    import os
-
-    download_dir = './poc_drafts/'
-
-    for commit in final_state['commit_history']:
-        client.download_file(commit['file_id'], os.path.join(download_dir, f'{commit["commit_id"]}.txt'))
-
-    print('after 2nd push', final_state)
-    print(os.listdir(download_dir))
-
-    client.clear_cache()
+    # client.clear_cache()
+    #
+    # file_id_1 = client.upload_file('./compiled_contracts/repository_abi.json')
+    # file_id_2 = client.upload_file('./compiled_contracts/repository_bytecode.txt')
+    # state = {
+    #     'commit_history': [{
+    #         'commit_id': 1,
+    #         'file_id': file_id_1
+    #     }, {
+    #         'commit_id': 2,
+    #         'file_id': file_id_2
+    #     }]
+    # }
+    #
+    # client.create_repository('test_repo')
+    #
+    # client.list_repositories()
+    #
+    # print('init repo state', client.contract_getter('git_pull', name='test_repo'))
+    # client.contract_setter('git_push', json.dumps(state), name='test_repo')
+    print('after 1st push', json.loads(client.contract_getter('git_pull', name='test')))
+    #
+    # file_id_3 = client.upload_file('./contracts/Repository.sol')
+    # state['commit_history'].append({'commit_id': 3, 'file_id': file_id_3})
+    #
+    # client.contract_setter('git_push', json.dumps(state), name='test_repo')
+    #
+    # final_state = json.loads(client.contract_getter('git_pull', name='test_repo'))
+    #
+    # import os
+    #
+    # download_dir = './poc_drafts/'
+    #
+    # for commit in final_state['commit_history']:
+    #     client.download_file(commit['file_id'], os.path.join(download_dir, f'{commit["commit_id"]}.txt'))
+    #
+    # print('after 2nd push', final_state)
+    # print(os.listdir(download_dir))
+    #
+    # client.clear_cache()

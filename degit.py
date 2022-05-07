@@ -1,4 +1,5 @@
 # built-in libs
+import json
 import os
 import copy
 import shutil
@@ -12,8 +13,8 @@ class DEGIT:
 
     def __init__(self):
         # defaults
-        self.default_cache_file = './.degit'
-        self.default_snapshot_dir = './.snapshot'
+        self.default_cache_file = os.path.normpath('./.degit')
+        self.default_snapshot_dir = os.path.normpath('./.snapshot')
         self.default_init_branch = 'master'
 
         # use debug chain by default unless set in environment variable 'BLOCKCHAIN_URL'
@@ -53,7 +54,7 @@ class DEGIT:
 
         return inner1
 
-    def init(self):
+    def init(self, args):
         """Initialize repository with branch master if not already initialized."""
         if os.path.exists(self.default_cache_file):
             raise Exception('The current directory contains a repository that has already been initialized.')
@@ -62,8 +63,10 @@ class DEGIT:
                 "branch": {
                     self.default_init_branch: {'commit_history': []},
                 },
-                'repo': '',
+                'name': args.repository_name[0],
                 'head': self.default_init_branch,
+                'remote_address': None,
+                'remote_abi': None,
                 'file_list': []}
 
             self._save_state()
@@ -176,20 +179,24 @@ class DEGIT:
             return
 
         # Save snapshot locally
-        os.makedir(snapshot_dir)
+        os.makedirs(snapshot_dir)
         for file in self.state["file_list"]:
             shutil.copyfile(file, os.path.join(snapshot_dir, file))
 
-        package_path = self._save_archive(snapshot_dir)
-        self.state['branch'][self.head]['commit_history'].append({
+        snapshot_format = 'zip'
+        package_path = self._save_archive(snapshot_dir, snapshot_format)
+        head = self.state['head']
+        self.state['branch'][head]['commit_history'].append({
             'file_id': None,
             'commit_hash': commit_hash,
-            'snapshot_path': package_path,
-            'is_pushed': False
+            'snapshot_path': snapshot_dir + "." + snapshot_format,
+            'is_push': False
         })
 
+        print(f'Commit {commit_hash} was successful.')
+
     @validate_and_persist
-    def push(self):
+    def push(self, args):
         '''
         create ether transaction
         upload [code files] to ETD ( return file id)
@@ -197,19 +204,26 @@ class DEGIT:
         new transaction hash = hash(previous commit hash)
         previous and current commit acts like a linked list
         '''
+        branch_name = args.branch_name[0]
+
         is_changes = False
         success_push = True
         tmp_state = copy.deepcopy(self.state)
-        for branch_name, branch_dict in self.state['branch'].items():
-            for i, commit in enumerate(branch_dict['commit_history']):
-                if not commit["is_push"]:
-                    is_changes = True
-                    file_id = self.account.upload_file(file_path=commit["package_path"])
-                    if file_id is not None:
-                        tmp_state['branch'][branch_name][i]['file_id'] = file_id
-                        tmp_state['branch'][branch_name][i]['is_pushed'] = True
-                    else:
-                        success_push = False
+
+        pushed_commit = []
+
+        for i, commit in enumerate(tmp_state['branch'][branch_name]['commit_history']):
+            if not commit["is_push"]:
+                is_changes = True
+                file_id = self.client.upload_file(file_path=commit["snapshot_path"])
+                if file_id is not None:
+                    commit['file_id'] = file_id
+                    commit['is_push'] = True
+                    pushed_commit.append(commit['commit_hash'])
+                else:
+                    success_push = False
+
+        local_commit_hashes = [commit['commit_hash'] for commit in self.state['branch'][branch_name]['commit_history']]
 
         if not is_changes:
             print('No new commits to push')
@@ -217,15 +231,35 @@ class DEGIT:
 
         # if push succeed
         if success_push:
-            self.state = tmp_state
+            if not self.state['remote_address'] and not self.state['remote_abi']:
+                self.state['remote_address'], self.state['remote_abi'] = self.client.create_repository(
+                    self.state['name'])
 
             # download origin state
+            remote_state = self.client.contract_getter('git_pull', name=self.state['name'])
 
-            # check if there is commit in origin BUT NOT IN local
+            # if remote has just been created, the state will be empty string
+            if remote_state is not None and remote_state != '':
+                remote_state = json.loads(remote_state)
 
-            # if yes DENY push and ask for resolve conflicts
+                if branch_name in remote_state['branch']:
+                    # check if there is commit in origin BUT NOT IN local
+                    remote_commit_hashes = [commit['commit_hash'] for commit in
+                                            remote_state['branch'][branch_name]['commit_history']]
+
+                    commit_exists_on_remote_but_not_local = list(set(remote_commit_hashes) - set(local_commit_hashes))
+
+                    # if yes DENY push and ask for resolve conflicts
+                    if len(commit_exists_on_remote_but_not_local) > 0:
+                        raise Exception(
+                            f'Branch {branch_name} on the origin has commits not in local. Please resolve conflicts.')
+
+            # replace real state with temp state
+            self.state = tmp_state
 
             # if no accept push to blockchain
+            self.client.contract_setter('git_push', json.dumps(self.state), name=self.state['name'])
+            print(f'Pushed commits "{",".join(pushed_commit)}" to repository "{self.state["name"]}".')
 
         else:
             print('Failed upload to blockchain')
@@ -239,10 +273,10 @@ class DEGIT:
     def logs(self):
         pass
 
-    def _save_archive(self, path):
+    def _save_archive(self, path, format='zip'):
         package_path = shutil.make_archive(
             path,
-            'zip',
+            format,
             path
         )
         return package_path
@@ -250,3 +284,32 @@ class DEGIT:
     # def _zip(self, files: list):
     #     # pack-up the files
     #     pass
+
+
+if __name__ == '__main__':
+    class ArgparseMimic:
+        pass
+
+    degit = DEGIT()
+
+    mimic = ArgparseMimic()
+
+    if os.path.exists('.degit'):
+        os.remove('.degit')
+    if os.path.exists('.ethclient'):
+        os.remove('.ethclient')
+    if os.path.exists('.snapshot'):
+        import shutil
+        shutil.rmtree('.snapshot', ignore_errors=True)
+
+    setattr(mimic, 'repository_name', ['test'])
+    degit.init(mimic)
+
+    setattr(mimic, 'file_list', ['utils.py'])
+    setattr(mimic, 'v', True)
+    degit.add(mimic)
+
+    degit.commit()
+
+    setattr(mimic, 'branch_name', ['master'])
+    degit.push(mimic)
