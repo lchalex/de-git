@@ -25,7 +25,11 @@ def main(argv=sys.argv[1:]):
     argsp = argsubparsers.add_parser("branch")
     argsp.add_argument("branch_name", metavar="branch_name", nargs=1, help="Branch name")
 
+    argsp = argsubparsers.add_parser("list_branch")
     argsp = argsubparsers.add_parser("commit")
+    argsp = argsubparsers.add_parser("pull")
+    argsp = argsubparsers.add_parser("stash")
+    argsp = argsubparsers.add_parser("pop_stash")
 
     args = argparser.parse_args(argv)
     git = DEGIT()
@@ -38,8 +42,16 @@ def main(argv=sys.argv[1:]):
         git.init(args)
     elif args.command == "push":
         git.push(args)
+    elif args.command == "pull":
+        git.pull()
+    elif args.command == "stash":
+        git.stash()
+    elif args.command == "pop_stash":
+        git.pop_stash()
     elif args.command == "branch":
         git.branch(args)
+    elif args.command == "list_branch":
+        git.list_branch()
     elif args.command == "get_current_state":
         git.get_current_state()
 
