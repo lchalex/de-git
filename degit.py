@@ -1,8 +1,10 @@
+# built-in libs
 import os
 import copy
 import shutil
 import pickle
 import hashlib
+from EthereumClient import EthereumClient
 from utils import bcolors, get_files, clear_text_color, unique
 
 
@@ -10,7 +12,7 @@ class DEGIT:
 
     def __init__(self):
         # defaults
-        self.default_cache_file = './.dgit'
+        self.default_cache_file = './.degit'
         self.default_snapshot_dir = './.snapshot'
         self.default_init_branch = 'master'
 
@@ -18,6 +20,9 @@ class DEGIT:
         self.block_chain_url = os.environ.get('BLOCKCHAIN_URL', 'https://rpc.debugchain.net')
         self.block_chain_id = os.environ.get('BLOCKCHAIN_ID', 8348)
         self.db_url = os.environ.get('DB_URL', 'http://39.98.50.209:5145/')
+
+        # init etherdata client
+        self.client = EthereumClient()
 
         # get current repo state
         self.state = {}
@@ -62,6 +67,7 @@ class DEGIT:
                 'file_list': []}
 
             self._save_state()
+            print('Initialized Repository. State file created in current directory.')
 
     def checkout(self):
         """Checkout a branch or commit base on user input."""
@@ -232,9 +238,6 @@ class DEGIT:
 
     def logs(self):
         pass
-
-    def _count(self):
-        return self.ether_client.block_number()
 
     def _save_archive(self, path):
         package_path = shutil.make_archive(

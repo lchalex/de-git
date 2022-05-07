@@ -25,23 +25,36 @@ def get_files(ommit: list) -> list:
 
 
 def get_all_files() -> list:
-    if os.path.exists(".dgitignore"):
-        with open(".dgitignore", 'r') as f:
-            k = f.read()
-    ignore_list = ["__pycache__",
-                   ".pyc",
-                   ".git",
-                   ".dgit", ]
-    PWD = os.path.join(os.getcwd(), "*")
+    root = os.getcwd()
+    file_set = set()
 
-    all_file_list = []
-    for root, dirs, files in os.walk(os.getcwd()):
-        for f in files:
-            full = os.path.join(root, f)  # absolute file path
-            file_path = os.path.join(*(full.split("/")[2:]))  # relative file path
-            if not any(word in file_path for word in ignore_list):
-                all_file_list.append(file_path)
-    return all_file_list
+    ignore_list = []
+    if os.path.exists(".degitignore"):
+        with open('./.degitignore', 'r') as f:
+            ignore_list = f.readlines()
+            ignore_list = [line.rstrip() for line in ignore_list]
+
+    dirs_to_ignore = [os.path.normpath(ignore) for ignore in ignore_list if os.path.isdir(ignore)]
+    files_to_ignore = list(set(ignore_list) - set(dirs_to_ignore))
+
+    for dir_, _, files in os.walk(root):
+        for file_name in files:
+
+            rel_dir = os.path.relpath(dir_, root)
+            rel_file = os.path.join(rel_dir, file_name)
+
+            # if the file is in the project directory, there will be '.'. Remove the '.' here
+            if rel_dir == os.path.normpath('.'):
+                rel_file = rel_file.split(os.path.sep)[1]
+
+            if os.path.normpath(rel_file).split(os.path.sep)[0] in dirs_to_ignore:
+                continue
+            if rel_file in files_to_ignore:
+                continue
+
+            file_set.add(rel_file)
+
+    return list(file_set)
 
 
 def clear_text_color():

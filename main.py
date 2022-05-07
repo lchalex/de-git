@@ -35,7 +35,7 @@ def main(argv=sys.argv[1:]):
     elif args.command == "commit":
         git.commit()
     elif args.command == "init":
-        git.init(args)
+        git.init()
     elif args.command == "log":
         git.log(args)
     elif args.command == "branch":
