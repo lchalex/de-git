@@ -50,8 +50,6 @@ def main(argv=sys.argv[1:]):
         git.pop_stash()
     elif args.command == "branch":
         git.branch(args)
-    elif args.command == "list_branch":
-        git.list_branch()
     elif args.command == "get_current_state":
         git.get_current_state()
 
