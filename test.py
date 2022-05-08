@@ -39,9 +39,6 @@ def run_test():
     # setup for test
     clear_all_cache()
 
-    # Owner has written some code
-    create_test_file()
-
     def owner_action():
         degit = DEGIT()
         mimic = ArgparseMimic()
@@ -66,7 +63,11 @@ def run_test():
         # Owner dump his repository connection details (address & abi) for his friend
         degit.dump_repository_config()
 
+    print("Owner's Log:")
+    # Owner has written some code
+    create_test_file()
     owner_action()
+    print()
 
     def friend_action():
         # Friend uses degit
@@ -82,7 +83,9 @@ def run_test():
 
         clear_all_cache()
 
+    print("Friend's Log:")
     friend_action()
+    print()
 
 
 if __name__ == '__main__':

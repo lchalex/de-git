@@ -31,7 +31,8 @@ python test.py
 
 You should obtain a console output similar to this one:
 ```
-File last modified time on Owner machine: 2022-05-08 12:14:58
+Owner's Log:
+File last modified time on Owner machine: 2022-05-08 12:25:00
 Initialized Repository. State file created in current directory.
 Committed files:
 
@@ -41,13 +42,16 @@ Staged files:
 	test.txt
 
 Commit 076bb1b40881a287b47ca56d7d17d2c54815dd36 was successful.
-Contract deployed to chain, contract address: 0x956462648eD458079CBEf6323E5CcE390285E7C4. 
+Contract deployed to chain, contract address: 0x7B9ef343909fD32b8Ad7c9667Dc49Dd4034e4742. 
 Pushed commits "076bb1b40881a287b47ca56d7d17d2c54815dd36" to repository "test".
 Whitelisted user of address: 0xbe2545A975e8A6Efd0BA5c4600aE4CfA228DA8b5
 Dumped repository config to ./repo_config.pkl.
+
+Friend's Log:
 Loaded repository config from ./repo_config.pkl
 Replace your repository by commit 076bb1b40881a287b47ca56d7d17d2c54815dd36
-File last modified time on friend machine: 2022-05-08 12:15:06
+File last modified time on friend machine: 2022-05-08 12:25:07
+
 
 Process finished with exit code 0
 ```
