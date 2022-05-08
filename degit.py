@@ -297,6 +297,8 @@ class DEGIT:
                     print(f'Replace your repository by commit {commit_hash}')
                     for file in remote_state['file_list']:
                         src_file = os.path.join(self.default_snapshot_dir, commit_hash, file)
+                        if os.path.dirname(file) != '' and (not os.path.exists(os.path.dirname(file))):
+                            os.makedirs(os.path.dirname(file), exist_ok=True)
                         if os.path.exists(src_file):
                             shutil.copyfile(src_file, file)
                             
