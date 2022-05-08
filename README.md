@@ -1,6 +1,7 @@
-## De-Github
+# De-Github
 
-### Installing dependencies
+## Setup
+
 We are using Python 3.8 for development.
 
 Install required packages by running
@@ -8,8 +9,7 @@ Install required packages by running
 pip install -r requirements.txt
 ```
 
-### Setup
-We are also using Ganache to create a blockchain network at local environment for development and testing.
+We are using Ganache to create a blockchain network at local environment for development and testing.
 
 Please head to the [Ganache website](https://trufflesuite.com/ganache/) and download it.
 
@@ -19,10 +19,10 @@ Remember to define the `RPC_SERVER` environment variable, by default the value i
 
 Also please put your private key in the `.key` file. Degit will automatically load the key and use it for git operations.
 
-### How to run tests
+## How to run tests
 We have prepare a `test.py` for your convenient.
 
-Before you run the tests, you must put in two different private key to `.key` and `.second_user_key` (you can randomly pick 2 from Ganache).
+**Before you run the tests, you must put in two different private key to `.key` and `.second_user_key` (you can randomly pick 2 from Ganache).**
 
 Then run:
 ```
