@@ -82,24 +82,22 @@ class DEGIT:
     @validate_and_persist
     def branch(self, args):
         # switch branch should pull latest snapshot and overwrite any uncommitted changes
-        """Create branch if not yet exists"""
-        branch_name = args.branch_name[0]
-        if branch_name in self.state:
-            raise Exception(f'Branch {branch_name} already exists.')
+        """Create branch if not yet exists. List out existing branches if no branch name is given."""
+        if args.branch_name:
+            branch_name = args.branch_name[0]
+            if branch_name in self.state:
+                raise Exception(f'Branch {branch_name} already exists.')
+            else:
+                current_branch = self.state['head']
+                self.state['branch'][branch_name] = self.state['branch'][current_branch]
+                self.state['head'] = branch_name
         else:
             current_branch = self.state['head']
-            self.state['branch'][branch_name] = self.state['branch'][current_branch]
-            self.state['head'] = branch_name
-    
-    @validate_and_persist
-    def list_branch(self):
-        """List out existing branches if no branch name is given."""
-        current_branch = self.state['head']
-        for branch in self.state['branch']:
-            if branch == current_branch:
-                print('*' + branch)
-            else:
-                print(branch)
+            for branch in self.state['branch']:
+                if branch == current_branch:
+                    print('* ' + branch)
+                else:
+                    print(branch)
 
     @validate_and_persist
     def add(self, args):
