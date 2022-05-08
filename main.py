@@ -25,7 +25,6 @@ def main(argv=sys.argv[1:]):
     argsp = argsubparsers.add_parser("branch")
     argsp.add_argument("branch_name", metavar="branch_name", nargs='?', help="Branch name")
 
-    argsp = argsubparsers.add_parser("list_branch")
     argsp = argsubparsers.add_parser("commit")
     argsp = argsubparsers.add_parser("pull")
     argsp = argsubparsers.add_parser("stash")
