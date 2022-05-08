@@ -95,7 +95,7 @@ class DEGIT:
             current_branch = self.state['head']
             for branch in self.state['branch']:
                 if branch == current_branch:
-                    print('*' + branch)
+                    print('* ' + branch)
                 else:
                     print(branch)
 
@@ -181,6 +181,9 @@ class DEGIT:
         # Save snapshot locally
         os.makedirs(snapshot_dir)
         for file in self.state["file_list"]:
+            dirname = os.path.dirname(file)
+            if not os.path.exists(os.path.join(snapshot_dir, dirname)):
+                os.makedirs(os.path.join(snapshot_dir, dirname))
             shutil.copyfile(file, os.path.join(snapshot_dir, file))
 
         snapshot_format = 'zip'
@@ -232,7 +235,7 @@ class DEGIT:
         # if push succeed
         if success_push:
             if not self.state['remote_address'] and not self.state['remote_abi']:
-                self.state['remote_address'], self.state['remote_abi'] = self.client.create_repository(
+                tmp_state['remote_address'], tmp_state['remote_abi'] = self.client.create_repository(
                     self.state['name'])
 
             # download origin state
@@ -265,10 +268,72 @@ class DEGIT:
             print('Failed upload to blockchain')
 
     @validate_and_persist
-    def pull(self, args):
+    def pull(self):
         # update current snapshot file list by last commit plz
-        # self.state["file_list"] =
-        pass
+        remote_state = self.client.contract_getter('git_pull', name=self.state['name'])
+        if remote_state is not None and remote_state != '':
+            remote_state = json.loads(remote_state)
+            # Download all commits
+            download_hash = []
+            for branch_name in remote_state['branch'].keys():
+                for i, commit in enumerate(remote_state['branch'][branch_name]['commit_history']):
+                    commit_hash = commit['commit_hash']
+                    if not os.path.exists(os.path.join(self.default_snapshot_dir, commit_hash)): # Download new commit
+                        file_id = commit['file_id']
+                        download_path = os.path.join(self.default_snapshot_dir, commit_hash + '.zip')
+                        self.client.download_file(file_id, download_path)
+                        self._unarchive(download_path)
+                        download_hash.append(commit_hash)
+            
+            if len(download_hash) == 0:
+                print("Your repository is already up to date")
+                return
+            
+            if self.state['head'] in remote_state['branch']:
+                if len(remote_state['branch'][self.state['head']]['commit_history']) > 0:
+                    # Replace your code by latest commit so you should stash your work first
+                    latest_commit = remote_state['branch'][self.state['head']]['commit_history'][-1]
+                    commit_hash = latest_commit['commit_hash']
+                    print(f'Replace your repository by commit {commit_hash}')
+                    for file in remote_state['file_list']:
+                        src_file = os.path.join(self.default_snapshot_dir, commit_hash, file)
+                        if os.path.exists(src_file):
+                            shutil.copyfile(src_file, file)
+                            
+            remote_state['head'] = self.state['head']
+            self.state = remote_state
+            
+        else:
+            print("No history found")
+
+    def stash(self):
+        '''Temporary save your changes'''
+        snapshot_dir = os.path.join(self.default_snapshot_dir, 'stash')
+        if os.path.exists(snapshot_dir):
+            print("Remove old stash")
+            shutil.rmtree(snapshot_dir)
+
+        os.makedirs(snapshot_dir)
+        for file in self.state["file_list"]:
+            dirname = os.path.dirname(file)
+            if not os.path.exists(os.path.join(snapshot_dir, dirname)):
+                os.makedirs(os.path.join(snapshot_dir, dirname))
+            shutil.copyfile(file, os.path.join(snapshot_dir, file))
+
+    def pop_stash(self):
+        '''Restore your save'''
+        snapshot_dir = os.path.join(self.default_snapshot_dir, 'stash')
+        if not os.path.exists(snapshot_dir):
+            print("No stash history found")
+            return
+
+        for file in self.state["file_list"]:
+            if os.path.exists(os.path.join(snapshot_dir, file)):
+                if not os.path.exists(os.path.dirname(file)) and os.path.dirname(file) != '':
+                    os.makedirs(os.path.dirname(file))
+                shutil.copyfile(os.path.join(snapshot_dir, file), file)
+        
+        shutil.rmtree(snapshot_dir)
 
     def logs(self):
         pass
@@ -280,6 +345,16 @@ class DEGIT:
             path
         )
         return package_path
+    
+    def _unarchive(self, zip_path):
+        commit_hash = os.path.splitext(os.path.basename(zip_path))[0]
+        extract_dir = os.path.join(self.default_snapshot_dir, commit_hash)
+        if not os.path.exists(extract_dir):
+            shutil.unpack_archive(
+                zip_path,
+                extract_dir,
+                'zip'
+            )
 
     # def _zip(self, files: list):
     #     # pack-up the files
