@@ -70,15 +70,15 @@ This `test.py` mimic two users (1 owner and 1 collaborator):
 
 The printed file last modified time shows that the file is truly replaced by the one pulled from the repository.
 
-### FileStorage
+## FileStorage
 At the moment we are using HKUST provided endpoint to upload file and download file. 
 
 In the future, we might deploy a smart contract ourselves as a decentralized filestorage.
 
-### Smart Contract
+## Smart Contract
 At the moment we have `./contracts/Repository.sol` only.
 
 This is the template repository we defined to allow user to create repository with access control.
 
-### Limited Functions
+## Limited Functions
 It is unfortunate that due to limited time and team members, we are unable to replicate git fully.
