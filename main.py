@@ -25,8 +25,22 @@ def main(argv=sys.argv[1:]):
     argsp = argsubparsers.add_parser("branch")
     argsp.add_argument("branch_name", metavar="branch_name", nargs='?', help="Branch name")
 
+    argsp = argsubparsers.add_parser("whitelist_add_user")
+    argsp.add_argument("address", metavar="address", nargs=1, help="Branch name")
+
+    argsp = argsubparsers.add_parser("whitelist_remove_user")
+    argsp.add_argument("address", metavar="address", nargs=1, help="Branch name")
+
+    argsp = argsubparsers.add_parser("dump_repository_config")
+
+    argsp = argsubparsers.add_parser("load_repository_config")
+
     argsp = argsubparsers.add_parser("commit")
+
     argsp = argsubparsers.add_parser("pull")
+    argsp.add_argument("address", metavar="address", nargs='?', help="Repository contract address")
+    argsp.add_argument("abi", metavar="abi", nargs='?', help="Repository ABI")
+
     argsp = argsubparsers.add_parser("stash")
     argsp = argsubparsers.add_parser("pop_stash")
 
@@ -42,7 +56,7 @@ def main(argv=sys.argv[1:]):
     elif args.command == "push":
         git.push(args)
     elif args.command == "pull":
-        git.pull()
+        git.pull(args)
     elif args.command == "stash":
         git.stash()
     elif args.command == "pop_stash":
@@ -51,6 +65,14 @@ def main(argv=sys.argv[1:]):
         git.branch(args)
     elif args.command == "get_current_state":
         git.get_current_state()
+    elif args.command == "whitelist_add_user":
+        git.whitelist_add_user(args)
+    elif args.command == "whitelist_remove_user":
+        git.whitelist_remove_user(args)
+    elif args.command == "dump_repository_config":
+        git.dump_repository_config()
+    elif args.command == "load_repository_config":
+        git.load_repository_config()
 
 
 if __name__ == '__main__':

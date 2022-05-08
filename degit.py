@@ -11,7 +11,7 @@ from utils import bcolors, get_files, clear_text_color, unique
 
 class DEGIT:
 
-    def __init__(self):
+    def __init__(self, private_key_path='./.key'):
         # defaults
         self.default_cache_file = os.path.normpath('./.degit')
         self.default_snapshot_dir = os.path.normpath('./.snapshot')
@@ -23,7 +23,7 @@ class DEGIT:
         self.db_url = os.environ.get('DB_URL', 'http://39.98.50.209:5145/')
 
         # init etherdata client
-        self.client = EthereumClient()
+        self.client = EthereumClient(private_key_path=private_key_path)
 
         # get current repo state
         self.state = {}
@@ -268,9 +268,26 @@ class DEGIT:
             print('Failed upload to blockchain')
 
     @validate_and_persist
-    def pull(self):
+    def pull(self, args):
+
+        if args:
+            assert args.address[0] & args.abi[0]
+            repository_address = args.address[0]
+            repository_abi = args.abi[0]
+
         # update current snapshot file list by last commit plz
-        remote_state = self.client.contract_getter('git_pull', name=self.state['name'])
+        if 'name' in self.state:
+            remote_state = self.client.contract_getter('git_pull', name=self.state['name'])
+
+        elif self.state.get('remote_address') is not None and self.state.get('remote_abi') is not None:
+            remote_state = self.client.contract_getter('git_pull', name=None,
+                                                       contract_address=self.state.get('remote_address'),
+                                                       abi=self.state.get('remote_abi'))
+
+        else:
+            remote_state = self.client.contract_getter('git_pull', name=None, contract_address=repository_address,
+                                                       abi=repository_abi)
+
         if remote_state is not None and remote_state != '':
             remote_state = json.loads(remote_state)
             # Download all commits
@@ -278,17 +295,21 @@ class DEGIT:
             for branch_name in remote_state['branch'].keys():
                 for i, commit in enumerate(remote_state['branch'][branch_name]['commit_history']):
                     commit_hash = commit['commit_hash']
-                    if not os.path.exists(os.path.join(self.default_snapshot_dir, commit_hash)): # Download new commit
+                    if not os.path.exists(os.path.join(self.default_snapshot_dir, commit_hash)):  # Download new commit
                         file_id = commit['file_id']
                         download_path = os.path.join(self.default_snapshot_dir, commit_hash + '.zip')
                         self.client.download_file(file_id, download_path)
                         self._unarchive(download_path)
                         download_hash.append(commit_hash)
-            
+
             if len(download_hash) == 0:
                 print("Your repository is already up to date")
                 return
-            
+
+            # if this is user's first pull
+            if 'head' not in self.state:
+                self.state['head'] = 'master'
+
             if self.state['head'] in remote_state['branch']:
                 if len(remote_state['branch'][self.state['head']]['commit_history']) > 0:
                     # Replace your code by latest commit so you should stash your work first
@@ -301,10 +322,10 @@ class DEGIT:
                             os.makedirs(os.path.dirname(file), exist_ok=True)
                         if os.path.exists(src_file):
                             shutil.copyfile(src_file, file)
-                            
+
             remote_state['head'] = self.state['head']
             self.state = remote_state
-            
+
         else:
             print("No history found")
 
@@ -334,8 +355,37 @@ class DEGIT:
                 if not os.path.exists(os.path.dirname(file)) and os.path.dirname(file) != '':
                     os.makedirs(os.path.dirname(file))
                 shutil.copyfile(os.path.join(snapshot_dir, file), file)
-        
+
         shutil.rmtree(snapshot_dir)
+
+    def whitelist_add_user(self, args):
+        address = args.address[0]
+        self.client.contract_setter('whitelist', address, name=self.state['name'])
+        print(f'Whitelisted user of address: {address}')
+
+    def whitelist_remove_user(self, args):
+        address = args.address[0]
+        self.client.contract_setter('whitelist_remove', address, name=self.state['name'])
+        print(f'Removed user of address from whitelist: {address}')
+
+    def dump_repository_config(self, config_path='./repo_config.pkl'):
+        config = {
+            'remote_address': self.state['remote_address'],
+            'remote_abi': self.state['remote_abi']
+        }
+
+        with open(config_path, 'wb') as f:
+            pickle.dump(config, f)
+        print(f'Dumped repository config to {config_path}.')
+
+    def load_repository_config(self, config_path='./repo_config.pkl'):
+
+        with open(config_path, 'rb') as f:
+            config = pickle.load(f)
+        self.state['remote_address'] = config['remote_address']
+        self.state['remote_abi'] = config['remote_abi']
+
+        print(f'Loaded repository config from {config_path}')
 
     def logs(self):
         pass
@@ -347,7 +397,7 @@ class DEGIT:
             path
         )
         return package_path
-    
+
     def _unarchive(self, zip_path):
         commit_hash = os.path.splitext(os.path.basename(zip_path))[0]
         extract_dir = os.path.join(self.default_snapshot_dir, commit_hash)
@@ -357,36 +407,3 @@ class DEGIT:
                 extract_dir,
                 'zip'
             )
-
-    # def _zip(self, files: list):
-    #     # pack-up the files
-    #     pass
-
-
-if __name__ == '__main__':
-    class ArgparseMimic:
-        pass
-
-    degit = DEGIT()
-
-    mimic = ArgparseMimic()
-
-    if os.path.exists('.degit'):
-        os.remove('.degit')
-    if os.path.exists('.ethclient'):
-        os.remove('.ethclient')
-    if os.path.exists('.snapshot'):
-        import shutil
-        shutil.rmtree('.snapshot', ignore_errors=True)
-
-    setattr(mimic, 'repository_name', ['test'])
-    degit.init(mimic)
-
-    setattr(mimic, 'file_list', ['utils.py'])
-    setattr(mimic, 'v', True)
-    degit.add(mimic)
-
-    degit.commit()
-
-    setattr(mimic, 'branch_name', ['master'])
-    degit.push(mimic)
