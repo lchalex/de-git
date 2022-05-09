@@ -28,18 +28,19 @@
 
 Also please put your private key in the `.key` file. Degit will automatically load the key and use it for git operations.
 Or run `degit login <key path>` under repository folder.
+---
 
 ## How to run tests
 ### Option 1: `test.py`
 We have prepare a [`test.py`](test/test.py) for your convenient.
 
-**Before you run the tests, you must put in two different private key to `a.key` and `b.key` under `test/` (you can randomly pick 2 from Ganache).**
+**Before you run the tests, you must put in two different private key to `a.key` and `b.key` under `test/`. <br/> (you can randomly pick 2 from Ganache).**
 
 
 
 You should obtain a console output similar to this one:
+#### Owner's Log:
 ```
-Owner's Log:
 File last modified time on Owner machine: 2022-05-08 12:25:00
 Initialized Repository. State file created in current directory.
 Committed files:
@@ -55,15 +56,16 @@ Pushed commits "076bb1b40881a287b47ca56d7d17d2c54815dd36" to repository "test".
 Whitelisted user of address: 0xbe2545A975e8A6Efd0BA5c4600aE4CfA228DA8b5
 Dumped repository config to ./repo_config.pkl.
 
-Friend's Log:
+```
+#### Friend's Log:
+```bash
 Loaded repository config from ./repo_config.pkl
 Replace your repository by commit 076bb1b40881a287b47ca56d7d17d2c54815dd36
 File last modified time on friend machine: 2022-05-08 12:25:07
 
-
 Process finished with exit code 0
 ```
-
+---
 This `test.py` mimic two users (1 owner and 1 collaborator):
 1. The owner has written some code in `test.txt`
 1. The owner runs `degit init test` (`test` is the repository name)
@@ -120,16 +122,20 @@ degit load_repository_config
 
 degit pull 
 ```
-
+---
 ## FileStorage
 At the moment we are using HKUST provided endpoint to upload file and download file. 
 
 In the future, we might deploy a smart contract ourselves as a decentralized filestorage.
 
+---
+
 ## Smart Contract
 At the moment we have `./contracts/Repository.sol` only.
 
 This is the template repository we defined to allow user to create repository with access control.
+
+---
 
 ## Limited Functions
 It is unfortunate that due to limited time and team members, we are unable to replicate git fully.
