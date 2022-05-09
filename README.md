@@ -82,6 +82,8 @@ The printed file last modified time shows that the file is truly replaced by the
 
 ---
 ### Option 2: CLI Demo
+[![Watch the video](https://img.youtube.com/vi/B4tN1-YoYM4/hqdefault.jpg)](https://youtu.be/B4tN1-YoYM4)
+
 >User A
 ```bash
 mkdir repo_a 
@@ -101,8 +103,8 @@ degit commit
 degit push master 
 
 # add user to the repo whitelist
-degit whitelist add 0x6e4C7de1d42b63e5E1946D28aF7393697Ef544aa
-# degit whitelist remove 0x6e4C7de1d42b63e5E1946D28aF7393697Ef544aa
+degit whitelist add 0x0513E128c27B6E306D980661F39d0535A4d7133f
+# degit whitelist remove 0x0513E128c27B6E306D980661F39d0535A4d7133f
 
 # dump ABI and contract address 
 degit dump_repository_config
