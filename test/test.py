@@ -1,7 +1,6 @@
 import os
 import shutil
-from degit import DEGIT
-from EthereumClient import EthereumClient
+from degit import DEGIT, EthereumClient
 from datetime import datetime
 
 
@@ -31,7 +30,8 @@ def clear_all_cache():
 
 
 def run_test():
-    friend_private_key_path = './.second_user_key'
+    owner_key = './a.key'
+    friend_private_key_path = './b.key'
     client = EthereumClient(friend_private_key_path)
     friend_address = client.account.address
     del client
@@ -40,7 +40,7 @@ def run_test():
     clear_all_cache()
 
     def owner_action():
-        degit = DEGIT()
+        degit = DEGIT(private_key_path=owner_key)
         mimic = ArgparseMimic()
 
         setattr(mimic, 'repository_name', ['test'])
@@ -56,7 +56,7 @@ def run_test():
         degit.push(mimic)
 
         # Owner whitelist his friend to access his repository
-        setattr(mimic, 'address', [friend_address])
+        setattr(mimic, 'address_list', [friend_address])
         degit.whitelist_add_user(mimic)
 
         clear_all_cache()

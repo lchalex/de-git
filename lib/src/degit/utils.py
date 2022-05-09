@@ -1,3 +1,4 @@
+# built-in libs
 import os
 
 
@@ -35,6 +36,7 @@ def get_all_files() -> list:
             ignore_list = [line.rstrip() for line in ignore_list]
 
     dirs_to_ignore = [os.path.normpath(ignore) for ignore in ignore_list if os.path.isdir(ignore)]
+    suffix_to_ignore = [ignore for ignore in ignore_list if not os.path.isdir(ignore)]
     files_to_ignore = list(set(ignore_list) - set(dirs_to_ignore))
 
     for dir_, _, files in os.walk(root):
@@ -51,6 +53,8 @@ def get_all_files() -> list:
                 continue
             if rel_file in files_to_ignore:
                 continue
+            elif any([rel_file.endswith(suffix) for suffix in suffix_to_ignore]):
+                continue
 
             file_set.add(rel_file)
 
@@ -60,6 +64,14 @@ def get_all_files() -> list:
 def clear_text_color():
     print("\033[0m", end="")
 
+def login(args):
+    source = args.key_file[0]
+    if os.path.exists(source):
+        dest = "./.key"
+        with open(source, 'rb') as src, open(dest, 'wb') as dst: dst.write(src.read())
+        print(f"Login Successfully.")
+    else:
+        print(f"{source} is not existed.")
 
 if __name__ == '__main__':
     print(get_files())

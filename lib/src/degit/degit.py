@@ -5,8 +5,10 @@ import copy
 import shutil
 import pickle
 import hashlib
-from EthereumClient import EthereumClient
-from utils import bcolors, get_files, clear_text_color, unique
+
+# custom lib
+from .EthereumClient import EthereumClient
+from .utils import bcolors, get_files, clear_text_color, unique
 
 
 class DEGIT:
@@ -54,6 +56,14 @@ class DEGIT:
 
         return inner1
 
+    def _persist(func):
+        """Also persists state after the function call."""
+        def inner1(self, *args, **kwargs):
+            returned_values = func(self, *args, **kwargs)
+            self._save_state()
+            return returned_values
+        return inner1
+
     def init(self, args):
         """Initialize repository with branch master if not already initialized."""
         if os.path.exists(self.default_cache_file):
@@ -71,6 +81,13 @@ class DEGIT:
 
             self._save_state()
             print('Initialized Repository. State file created in current directory.')
+
+            with open('./.degitignore', 'w') as f:
+                f.write(".key\n")
+                f.write(".degit\n")
+                f.write(".degitignore\n")
+                f.write(".snapshot\n")
+
 
     def checkout(self):
         """Checkout a branch or commit base on user input."""
@@ -102,7 +119,7 @@ class DEGIT:
     @validate_and_persist
     def add(self, args):
         """
-        python3 main.py add 2.txt -v
+        degit add 2.txt -v
 
         stage_lists:           list - files going to stage
         staged_file_list:      list - staged files
@@ -142,7 +159,7 @@ class DEGIT:
         unstaged_file_list = sorted(unique(unstaged_file_list))
 
         # print the staged and unstaged file list
-        def stage_msg(start: str, file_list: list, color):
+        def print_files(start: str, file_list: list, color):
 
             msg = start
             for i in file_list:
@@ -151,9 +168,70 @@ class DEGIT:
             clear_text_color()
 
         if args.v:
-            stage_msg(f"Committed files:\n\n", last_commit_file_list, bcolors.ENDC)
-        stage_msg(f"Staged files:\n\n", staged_file_list, bcolors.GREEN)
-        # stage_msg(f"Unstaged files:\n\n", unstaged_file_list ,bcolors.RED)
+            print_files(f"Committed files:\n\n", last_commit_file_list, bcolors.ENDC)
+        print_files(f"Staged files:\n\n", staged_file_list, bcolors.GREEN)
+        print_files(f"Unstaged files:\n\n", unstaged_file_list ,bcolors.RED)
+
+        snapshot_file_list = unique(staged_file_list + last_commit_file_list)
+        self.state["file_list"] = staged_file_list
+
+    @validate_and_persist
+    def reset(self, args):
+        """
+        reset: remove file from current file_list.
+        degit reset 2.txt -v
+
+        reset_lists:           list - files going to stage
+        staged_file_list:      list - staged files
+        unstaged_file_list:    list - files not staged
+        last_commit_file_list: list - files in latest commit
+        snapshot_file_list:    list - file list in latest commit
+        """
+        reset_lists = args.file_list
+        head = self.state['head']
+        current_branch = self.state["branch"][head]
+        if current_branch["commit_history"]:
+            last_commit_file_list = current_branch["commit_history"][-1]["file_list"]
+        else:
+            last_commit_file_list = []
+
+        # list the snapshot files.
+        snapshot_file_list = self.state["file_list"]
+        # list all files in all dir and sub_dir, and ommit ignored file
+        unstaged_file_list = get_files(ommit=snapshot_file_list)
+        # list the uncommitted, but staged files.
+        staged_file_list = [file_path for file_path in snapshot_file_list if file_path not in last_commit_file_list]
+
+        # find stage and unstage file.
+        for file_path in reset_lists:
+            if file_path in staged_file_list:
+                staged_file_list.remove(file_path)
+                unstaged_file_list.append(file_path)
+                continue
+            elif file_path in last_commit_file_list:
+                last_commit_file_list.remove(file_path)
+                print(f"{file_path} is removed forcely.")
+            else:
+                if not os.path.exists(file_path):
+                    raise Exception(f"{file_path} not found.")
+
+        # remove duplicate and sort
+        staged_file_list = sorted(unique(staged_file_list))
+        unstaged_file_list = sorted(unique(unstaged_file_list))
+
+        # print the staged and unstaged file list
+        def print_files(start: str, file_list: list, color):
+
+            msg = start
+            for i in file_list:
+                msg += f"\t{color}{i}\n"
+            print(msg)
+            clear_text_color()
+
+        if args.v:
+            print_files(f"Committed files:\n\n", last_commit_file_list, bcolors.ENDC)
+        print_files(f"Staged files:\n\n", staged_file_list, bcolors.GREEN)
+        print_files(f"Unstaged files:\n\n", unstaged_file_list ,bcolors.RED)
 
         snapshot_file_list = unique(staged_file_list + last_commit_file_list)
         self.state["file_list"] = staged_file_list
@@ -271,15 +349,15 @@ class DEGIT:
     def pull(self, args):
 
         if args:
-            assert args.address[0] & args.abi[0]
+            assert args.address[0] & args.abi[0]            
             repository_address = args.address[0]
             repository_abi = args.abi[0]
 
         # update current snapshot file list by last commit plz
-        if 'name' in self.state:
-            remote_state = self.client.contract_getter('git_pull', name=self.state['name'])
+        # if 'name' in self.state:
+        #     remote_state = self.client.contract_getter('git_pull', name=self.state['name'])
 
-        elif self.state.get('remote_address') is not None and self.state.get('remote_abi') is not None:
+        if self.state.get('remote_address') is not None and self.state.get('remote_abi') is not None:
             remote_state = self.client.contract_getter('git_pull', name=None,
                                                        contract_address=self.state.get('remote_address'),
                                                        abi=self.state.get('remote_abi'))
@@ -359,14 +437,14 @@ class DEGIT:
         shutil.rmtree(snapshot_dir)
 
     def whitelist_add_user(self, args):
-        address = args.address[0]
-        self.client.contract_setter('whitelist', address, name=self.state['name'])
-        print(f'Whitelisted user of address: {address}')
+        for address_ in args.address_list:
+            self.client.contract_setter('whitelist', address_, name=self.state['name'])
+            print(f'Whitelisted user of address: \n{address_}\n')
 
     def whitelist_remove_user(self, args):
-        address = args.address[0]
-        self.client.contract_setter('whitelist_remove', address, name=self.state['name'])
-        print(f'Removed user of address from whitelist: {address}')
+        for address_ in args.address_list:
+            self.client.contract_setter('whitelist_remove', address_, name=self.state['name'])
+            print(f'Removed user of address from whitelist: \n{address_}\n')
 
     def dump_repository_config(self, config_path='./repo_config.pkl'):
         config = {
@@ -378,6 +456,7 @@ class DEGIT:
             pickle.dump(config, f)
         print(f'Dumped repository config to {config_path}.')
 
+    @_persist
     def load_repository_config(self, config_path='./repo_config.pkl'):
 
         with open(config_path, 'rb') as f:
@@ -407,3 +486,4 @@ class DEGIT:
                 extract_dir,
                 'zip'
             )
+
