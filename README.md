@@ -85,6 +85,8 @@ The printed file last modified time shows that the file is truly replaced by the
 
 We have recorded a [Youtube Demo](https://youtu.be/B4tN1-YoYM4) for your convenient.
 
+[![Watch the video](https://img.youtube.com/vi/B4tN1-YoYM4/hqdefault.jpg)](https://youtu.be/B4tN1-YoYM4)
+
 >User A
 ```bash
 mkdir repo_a 
