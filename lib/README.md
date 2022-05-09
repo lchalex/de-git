@@ -1,33 +1,38 @@
 # De-Github
 
+- [Setup](#setup)
+- [How to run tests](#How-to-run-tests)
+	- [test.py](#option-1:`test.py`)
+	- [CLI](#Option-2:-CLI-Demo)
+- [FileStorage](#filestorage)
+- [Smart Contract](#smart-contract)
+- [Limited Functions](#limited-functions)
+
 ## Setup
 
-We are using Python 3.8 for development.
+1. We are using `Python 3.8` for development.
 
-Install required packages by running
-```
-pip install -r requirements.txt
-```
+2. install package from [pypi](https://pypi.org/project/degit/0.0.1/)
+	>pip3 install degit==0.0.1
 
-We are using Ganache to create a blockchain network at local environment for development and testing.
+3. We are using `Ganache` to create a blockchain network at local environment for development and testing.
 
-Please head to the [Ganache website](https://trufflesuite.com/ganache/) and download it.
+	Please head to the [Ganache website](https://trufflesuite.com/ganache/) and download it.
 
-Once you have installed Ganache, you can simple click on quickstart and you should be able to call degit functions.
+	Once you have installed Ganache, you can simple click on quickstart and you should be able to call degit functions.
 
-Remember to define the `RPC_SERVER` environment variable, by default the value is `http://127.0.0.1:7545` which is the default network of Ganache.
+	Remember to define the `RPC_SERVER` environment variable, by default the value is `http://127.0.0.1:7545` which is the default network of Ganache.
 
 Also please put your private key in the `.key` file. Degit will automatically load the key and use it for git operations.
+Or run `degit login <key path>` under repository folder.
 
 ## How to run tests
-We have prepare a `test.py` for your convenient.
+### Option 1: `test.py`
+We have prepare a [`test.py`](test/test.py) for your convenient.
 
-**Before you run the tests, you must put in two different private key to `.key` and `.second_user_key` (you can randomly pick 2 from Ganache).**
+**Before you run the tests, you must put in two different private key to `a.key` and `b.key` under `test/` (you can randomly pick 2 from Ganache).**
 
-Then run:
-```
-python test.py
-```
+
 
 You should obtain a console output similar to this one:
 ```
@@ -69,6 +74,49 @@ This `test.py` mimic two users (1 owner and 1 collaborator):
 1. The friend now has the `test.txt` in his machine
 
 The printed file last modified time shows that the file is truly replaced by the one pulled from the repository.
+
+---
+### Option 2: CLI Demo
+>User A
+```bash
+mkdir repo_a 
+cd repo_a
+# login to A account
+degit login ../test/a.key
+# Repo init
+degit init new_project
+# create files to add and commit
+touch README.MD 1.txt
+degit add README.MD 1.txt
+degit reset README.MD
+
+degit commit 
+
+# degit push <branch name>
+degit push master 
+
+# add user to the repo whitelist
+degit whitelist add 0x6e4C7de1d42b63e5E1946D28aF7393697Ef544aa
+# degit whitelist remove 0x6e4C7de1d42b63e5E1946D28aF7393697Ef544aa
+
+# dump ABI and contract address 
+degit dump_repository_config
+```
+
+>User B
+```bash
+# create second folder to clone repo
+mkdir ../repo_b/ 
+cp ./repo_config.pkl ../repo_b/
+cd ../repo_b/
+
+degit login ../test/b.key
+degit init tester
+# restore abi and contract address 
+degit load_repository_config
+
+degit pull 
+```
 
 ## FileStorage
 At the moment we are using HKUST provided endpoint to upload file and download file. 

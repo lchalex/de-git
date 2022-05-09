@@ -25,7 +25,4 @@ setuptools.setup(
     python_requires=">=3.8",
     entry_points={"console_scripts": ["degit = degit.main:main"]},
     include_package_data=True
-    # data_files=[('src/degit/compiled_contracts',
-    #              ['src/degit/compiled_contracts/*.json',
-    #               'src/degit/compiled_contracts/*.txt'])]
 )
