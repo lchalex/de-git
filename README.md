@@ -13,7 +13,7 @@
 1. We are using `Python 3.8` for development.
 
 2. install package from [pypi](https://pypi.org/project/degit/0.0.1/)
-	>pip3 install degit==0.0.1
+	> `pip3 install degit==0.0.1`
 
 3. We are using `Ganache` to create a blockchain network at local environment for development and testing.
 
