@@ -2,8 +2,8 @@
 
 - [Setup](#setup)
 - [How to run tests](#How-to-run-tests)
-	- [test.py](#option-1:`test.py`)
-	- [CLI](#Option-2:-CLI-Demo)
+	- [test.py](#option-1-testpy)
+	- [CLI](#option-2-cli-demo)
 - [FileStorage](#filestorage)
 - [Smart Contract](#smart-contract)
 - [Limited Functions](#limited-functions)
