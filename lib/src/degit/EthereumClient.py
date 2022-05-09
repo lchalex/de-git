@@ -1,11 +1,20 @@
+# built-in libs
 import json
 import os
 import pickle
+
+# third party lib
 import requests
 from urllib.parse import urljoin
 from http import HTTPStatus
 from web3 import Web3, HTTPProvider
 from web3.gas_strategies.rpc import rpc_gas_price_strategy
+
+try:
+    import importlib.resources as pkg_resources
+except ImportError:
+    import importlib_resources as pkg_resources
+
 
 url = os.environ.get('RPC_SERVER', 'http://127.0.0.1:7545')
 # will change to smart contract in future versions
@@ -66,9 +75,13 @@ class EthereumClient:
                                 'Please use a different repository name.')
 
         if not abi or not bytecode:
-            with open('./compiled_contracts/repository_abi.json', 'r') as f:
+            this_dir, this_filename = os.path.split(__file__)
+            abi_path = os.path.join(this_dir, 'compiled_contracts/repository_abi.json')
+            bytecode_path = os.path.join(this_dir, 'compiled_contracts/repository_bytecode.txt')
+
+            with open(abi_path, 'r') as f:
                 abi = json.load(f)
-            with open('./compiled_contracts/repository_bytecode.txt', 'r') as f:
+            with open(bytecode_path, 'r') as f:
                 bytecode = f.read()
 
         contract = self.w3.eth.contract(abi=abi, bytecode=bytecode)

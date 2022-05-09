@@ -1,0 +1,2 @@
+include src/degit/compiled_contracts/repository_abi.json
+include src/degit/compiled_contracts/repository_bytecode.txt
